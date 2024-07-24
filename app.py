@@ -3,7 +3,8 @@ from PIL import Image
 import torch
 from torchvision import transforms
 
-model = torch.hub.load('ultralytics/yolov5', 'custom', path = 'yolov5/runs/train/exp/weights/best.pt')
+model = torch.hub.load('ultralytics/yolov5', 'custom', path = 'best.pt', source='local')
+
 
 st.title('Brain Tumor Detection')
 st.write('Upload an MRI image to detect brain tumor.')
