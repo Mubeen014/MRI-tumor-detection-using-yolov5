@@ -1,12 +1,11 @@
 import streamlit as st
 from PIL import Image
-import torch
 import sys
 import cv2
 import numpy as np
 import os
 
-# Add YOLOv5 directory to path before importing run
+
 sys.path.append('yolov5')
 
 from detect import run
@@ -48,24 +47,24 @@ if uploaded_file is not None or sample_choice:
     if uploaded_file is not None:
         open_cv_image = create_opencv_image_from_stringio(uploaded_file)
         
-        # Save the uploaded image temporarily
+        # saving image temporarily
         temp_filename = 'temp.jpg'
         cv2.imwrite(temp_filename, open_cv_image)
     else:
         temp_filename = sample_images[sample_choice]
-    # Define output directory
+
     output_dir = 'results'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     
-    # Run detection
+    # Predicting using the model
     with st.spinner('🔍 Analyzing the image, please wait...'):
         run(weights='best.pt', source=temp_filename, project=output_dir, name='result', exist_ok=True)
     
-    # Construct the path to the output image
+ 
     result_img_path = os.path.join(output_dir, 'result', os.path.basename(temp_filename))
     
-    # Load and display the image with detections
+    # Image display
     if os.path.exists(result_img_path):
         detected_image = Image.open(result_img_path)
         st.image(detected_image, caption='Detection Results', use_column_width=True)
@@ -75,5 +74,3 @@ if uploaded_file is not None or sample_choice:
     # Clean up
     if uploaded_file is not None:
         os.remove(temp_filename)
-        # Remove results directory if needed
-        # os.remove(result_img_path)
