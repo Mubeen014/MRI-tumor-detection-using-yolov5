@@ -5,8 +5,9 @@ import sys
 from torchvision import transforms
 import cv2
 import numpy as np
-from detect import run
+import os
 
+# Add YOLOv5 directory to path before importing run
 sys.path.append('yolov5')
 
 from detect import run
@@ -19,13 +20,21 @@ def create_opencv_image_from_stringio(img_stream, cv2_img_flag=1):
     img_array = np.asarray(bytearray(img_stream.read()), dtype=np.uint8)
     return cv2.imdecode(img_array, cv2_img_flag)
 
+uploaded_file = st.file_uploader('Choose an image...', type=['jpg', 'jpeg', 'png'])
 
-uploaded_file = st.file_uploader('Chose an image...', type=['jpg', 'jpeg', 'png'])
-
-for n, img_file_buffer in enumerate(uploaded_file):
-  if img_file_buffer is not None:
-    open_cv_image = create_opencv_image_from_stringio(img_file_buffer)
-    im0 = run(source=open_cv_image, conf_thres=0.25, weights="best.pt")
-    if im0 is not None:
-        st.image(im0, channels="BGR", caption=f'Detection Results ({n+1}/{len(uploaded_file)})')
-    pass
+if uploaded_file is not None:
+    open_cv_image = create_opencv_image_from_stringio(uploaded_file)
+    
+    # Save the uploaded image temporarily
+    temp_filename = 'temp.jpg'
+    cv2.imwrite(temp_filename, open_cv_image)
+    
+    # Run detection
+    run(weights='best.pt', source=temp_filename)
+    
+    # Load and display the image with detections
+    detected_image = Image.open(temp_filename)
+    st.image(detected_image, caption='Detection Results', use_column_width=True)
+    
+    # Clean up
+    os.remove(temp_filename)
