@@ -2,7 +2,6 @@ import streamlit as st
 from PIL import Image
 import torch
 import sys
-from torchvision import transforms
 import cv2
 import numpy as np
 import os
@@ -29,12 +28,25 @@ if uploaded_file is not None:
     temp_filename = 'temp.jpg'
     cv2.imwrite(temp_filename, open_cv_image)
     
+    # Define output directory
+    output_dir = 'results'
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    
     # Run detection
-    run(weights='best.pt', source=temp_filename)
+    run(weights='best.pt', source=temp_filename, project=output_dir, name='result', exist_ok=True)
+    
+    # Construct the path to the output image
+    result_img_path = os.path.join(output_dir, 'result', os.path.basename(temp_filename))
     
     # Load and display the image with detections
-    detected_image = Image.open(temp_filename)
-    st.image(detected_image, caption='Detection Results', use_column_width=True)
+    if os.path.exists(result_img_path):
+        detected_image = Image.open(result_img_path)
+        st.image(detected_image, caption='Detection Results', use_column_width=True)
+    else:
+        st.write("Detection failed or no output image found.")
     
     # Clean up
     os.remove(temp_filename)
+    # Remove results directory if needed
+    # os.remove(result_img_path)
