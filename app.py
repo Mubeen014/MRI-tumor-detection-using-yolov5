@@ -11,7 +11,8 @@ sys.path.append('yolov5')
 
 from detect import run
 
-st.title('Brain Tumor Detection')
+st.title('🧠 Brain Tumor Detection')
+st.markdown('<style>body {color: #6a0dad;}</style>', unsafe_allow_html=True)
 st.write('Upload an MRI image to detect brain tumor.')
 
 def create_opencv_image_from_stringio(img_stream, cv2_img_flag=1):
@@ -19,22 +20,46 @@ def create_opencv_image_from_stringio(img_stream, cv2_img_flag=1):
     img_array = np.asarray(bytearray(img_stream.read()), dtype=np.uint8)
     return cv2.imdecode(img_array, cv2_img_flag)
 
+sample_images = {
+    'Glioma 1': 'sample_images/Glioma(1).jpg',
+    'Glioma 2': 'sample_images/Glioma(2).jpg',
+    'Glioma 3': 'sample_images/Glioma(3).jpg',
+    'Meningioma 1': 'sample_images/Meningioma(1).jpg',
+    'Meningioma 2': 'sample_images/Meningioma(2).jpg',
+    'Meningioma 3': 'sample_images/Meningioma(3).jpg',
+    'No_tumor 1': 'sample_images/No_tumor(1).jpg',
+    'No_tumor 2': 'sample_images/No_tumor(2).jpg',
+    'No_tumor 3': 'sample_images/No_tumor(3).jpg',
+    'Pituitary 1': 'sample_images/Pituitary(1).jpg',
+    'Pituitary 2': 'sample_images/Pituitary(2).jpg',
+    'Pituitary 3': 'sample_images/Pituitary(3).jpg',
+}
+
+st.sidebar.header('Sample Images')
+sample_choice = st.sidebar.selectbox('Chose a sample image', list(sample_images.keys()))
+
+if sample_choice:
+    st.sidebar.image(sample_images[sample_choice], caption=sample_choice, use_column_width=True)
+
 uploaded_file = st.file_uploader('Choose an image...', type=['jpg', 'jpeg', 'png'])
 
-if uploaded_file is not None:
-    open_cv_image = create_opencv_image_from_stringio(uploaded_file)
-    
-    # Save the uploaded image temporarily
-    temp_filename = 'temp.jpg'
-    cv2.imwrite(temp_filename, open_cv_image)
-    
+if uploaded_file is not None or sample_choice: 
+    if uploaded_file is not None:
+        open_cv_image = create_opencv_image_from_stringio(uploaded_file)
+        
+        # Save the uploaded image temporarily
+        temp_filename = 'temp.jpg'
+        cv2.imwrite(temp_filename, open_cv_image)
+    else:
+        temp_filename = sample_images[sample_choice]
     # Define output directory
     output_dir = 'results'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     
     # Run detection
-    run(weights='best.pt', source=temp_filename, project=output_dir, name='result', exist_ok=True)
+    with st.spinner('🔍 Analyzing the image, please wait...'):
+        run(weights='best.pt', source=temp_filename, project=output_dir, name='result', exist_ok=True)
     
     # Construct the path to the output image
     result_img_path = os.path.join(output_dir, 'result', os.path.basename(temp_filename))
