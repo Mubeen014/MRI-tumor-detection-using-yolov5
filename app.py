@@ -10,7 +10,7 @@ import os
 sys.path.append('yolov5')
 
 from detect import run
-
+@st.cache_resource
 def load_model(weights_path):
     return torch.hub.load('ultralytics/yolov5', 'custom', path=weights_path)
 model = load_model('best.pt')
