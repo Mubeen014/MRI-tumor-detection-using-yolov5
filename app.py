@@ -11,6 +11,10 @@ sys.path.append('yolov5')
 
 from detect import run
 
+def load_model(weights_path):
+    return torch.hub.load('ultralytics/yolov5', 'custom', path=weights_path)
+model = load_model('best.pt')
+
 st.title('🧠 Brain Tumor Detection')
 st.markdown('<style>body {color: #6a0dad;}</style>', unsafe_allow_html=True)
 st.write('Upload an MRI image to detect brain tumor.')
@@ -59,7 +63,8 @@ if uploaded_file is not None or sample_choice:
     
     # Run detection
     with st.spinner('🔍 Analyzing the image, please wait...'):
-        run(weights='best.pt', source=temp_filename, project=output_dir, name='result', exist_ok=True)
+        model(source=temp_filename, project=output_dir, name='result', exist_ok=True)
+        # run(weights='best.pt', source=temp_filename, project=output_dir, name='result', exist_ok=True)
     
     # Construct the path to the output image
     result_img_path = os.path.join(output_dir, 'result', os.path.basename(temp_filename))
@@ -72,6 +77,7 @@ if uploaded_file is not None or sample_choice:
         st.write("Detection failed or no output image found.")
     
     # Clean up
-    os.remove(temp_filename)
-    # Remove results directory if needed
-    # os.remove(result_img_path)
+    if uploaded_file is not None:
+        os.remove(temp_filename)
+        # Remove results directory if needed
+        # os.remove(result_img_path)
