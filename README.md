@@ -1,7 +1,6 @@
 # MRI Tumor Detection using yolov5
 * Clone the ultralytics/yolov5 repository from Github using the following link: 
 ```
-
 git clone https://github.com/ultralytics/yolov5.git
 ```
 * Run the following command to install the required libraries
