@@ -1,48 +1,40 @@
 import streamlit as st
-import torch
 from PIL import Image
+import torch
+import sys
+from torchvision import transforms
+import cv2
 import numpy as np
-from pathlib import Path
 import os
 
-# Function to load the YOLOv5 model
-def load_model(weights_path):
-    model = torch.hub.load('ultralytics/yolov5', 'custom', path=weights_path)
-    return model
+# Add YOLOv5 directory to path before importing run
+sys.path.append('yolov5')
 
-# Function to run detection
-def run_detection(image, model):
-    # Convert the image to RGB
-    img_rgb = image.convert('RGB')
-    
-    # Run detection
-    results = model(img_rgb)
+from detect import run
 
-    return results
+st.title('Brain Tumor Detection')
+st.write('Upload an MRI image to detect brain tumor.')
 
-# Load the model once
-model = load_model('best.pt')
+def create_opencv_image_from_stringio(img_stream, cv2_img_flag=1):
+    img_stream.seek(0)
+    img_array = np.asarray(bytearray(img_stream.read()), dtype=np.uint8)
+    return cv2.imdecode(img_array, cv2_img_flag)
 
-# Streamlit UI
-st.title('YOLOv5 Object Detection')
-st.write("Upload an image to detect objects")
-
-uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader('Choose an image...', type=['jpg', 'jpeg', 'png'])
 
 if uploaded_file is not None:
-    image = Image.open(uploaded_file)
-    st.image(image, caption='Uploaded Image', use_column_width=True)
-    st.write("Running detection...")
+    open_cv_image = create_opencv_image_from_stringio(uploaded_file)
+    
+    # Save the uploaded image temporarily
+    temp_filename = 'temp.jpg'
+    cv2.imwrite(temp_filename, open_cv_image)
     
     # Run detection
-    results = run_detection(image, model)
+    run(weights='best.pt', source=temp_filename)
     
-    # Show results
-    st.write("Detected objects:")
-    results.render()  # Render the detected bounding boxes and labels on the image
+    # Load and display the image with detections
+    detected_image = Image.open(temp_filename)
+    st.image(detected_image, caption='Detection Results', use_column_width=True)
     
-    # Convert the result image to numpy array
-    result_img = np.array(results.ims[0])
-    
-    # Display the result image with detections
-    st.image(result_img, caption='Detection Results', use_column_width=True)
+    # Clean up
+    os.remove(temp_filename)
